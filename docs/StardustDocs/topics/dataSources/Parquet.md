@@ -42,7 +42,7 @@ Requires the [`dataframe-arrow` module](Modules.md#dataframe-arrow), which is in
 
 ## Reading Parquet Files
 
-Kotlin DataFrame provides four `readParquet()` methods that can read from different source types.
+Kotlin DataFrame provides vararg and iterable `readParquet()` overloads for four source types: URL, String, Path, and File.
 All overloads accept optional `nullability` inference settings and `batchSize` for Arrow scanning.
 
 <!---FUN ReadParquetOverloads-->
@@ -143,6 +143,13 @@ check out the [example project](https://github.com/Kotlin/dataframe/tree/master/
 ### Multiple Files
 
 It's possible to read multiple Parquet files:
+
+The iterable overloads also accept lists or other iterables directly, without converting them to an array or using
+the spread operator. They consume the iterable once and accept the same `nullability` and `batchSize` settings as
+the vararg overloads. Directory discovery is not performed; each entry must identify a file.
+
+<!---FUN readParquetIterablePaths-->
+<!---END-->
 
 <!---FUN readMultipleParquetFiles-->
 

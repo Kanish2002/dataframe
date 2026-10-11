@@ -146,4 +146,15 @@ class Parquet {
         df.rowsCount() shouldBe 900
         df.columnsCount() shouldBe 20
     }
+
+    @Test
+    fun readParquetIterablePaths() {
+        val path = Paths.get(testParquet("sales").toURI())
+        // SampleStart
+        val paths = listOf(path, path)
+        val df = DataFrame.readParquet(paths, batchSize = 1024)
+        // SampleEnd
+        df.rowsCount() shouldBe 600
+        df.columnsCount() shouldBe 20
+    }
 }

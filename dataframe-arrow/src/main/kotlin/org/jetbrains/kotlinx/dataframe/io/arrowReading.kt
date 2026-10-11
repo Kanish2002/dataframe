@@ -19,6 +19,7 @@ import java.nio.channels.ReadableByteChannel
 import java.nio.channels.SeekableByteChannel
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.jvm.JvmName
 
 @Deprecated("SupportedDataFrameFormat is deprecated. Will be ERROR in 1.0.", level = DeprecationLevel.ERROR)
 @Suppress("DEPRECATION_ERROR")
@@ -409,3 +410,63 @@ public fun DataFrame.Companion.readParquet(
         nullability,
         batchSize,
     )
+
+/**
+ * Reads Parquet data from an iterable of URLs, with the same behavior as the vararg [readParquet] overload.
+ *
+ * The iterable is consumed once. [nullability] and [batchSize] are passed to the existing Parquet reader.
+ * Nested structures and timestamps follow the rules documented by [readParquet].
+ *
+ * @param urls The URLs to read; directories are not expanded.
+ */
+@JvmName("readParquetUrls")
+public fun DataFrame.Companion.readParquet(
+    urls: Iterable<URL>,
+    nullability: NullabilityOptions = NullabilityOptions.Infer,
+    batchSize: Long = ARROW_PARQUET_DEFAULT_BATCH_SIZE,
+): AnyFrame = readParquet(*urls.toList().toTypedArray(), nullability = nullability, batchSize = batchSize)
+
+/**
+ * Reads Parquet data from an iterable of file paths or URLs, with the same behavior as the vararg [readParquet] overload.
+ *
+ * The iterable is consumed once. [nullability] and [batchSize] are passed to the existing Parquet reader.
+ * Nested structures and timestamps follow the rules documented by [readParquet].
+ *
+ * @param strUrls The file paths or URLs to read; directories are not expanded.
+ */
+@JvmName("readParquetStrings")
+public fun DataFrame.Companion.readParquet(
+    strUrls: Iterable<String>,
+    nullability: NullabilityOptions = NullabilityOptions.Infer,
+    batchSize: Long = ARROW_PARQUET_DEFAULT_BATCH_SIZE,
+): AnyFrame = readParquet(*strUrls.toList().toTypedArray(), nullability = nullability, batchSize = batchSize)
+
+/**
+ * Reads Parquet data from an iterable of paths, with the same behavior as the vararg [readParquet] overload.
+ *
+ * The iterable is consumed once. [nullability] and [batchSize] are passed to the existing Parquet reader.
+ * Nested structures and timestamps follow the rules documented by [readParquet].
+ *
+ * @param paths The paths to read; directories are not expanded.
+ */
+@JvmName("readParquetPaths")
+public fun DataFrame.Companion.readParquet(
+    paths: Iterable<Path>,
+    nullability: NullabilityOptions = NullabilityOptions.Infer,
+    batchSize: Long = ARROW_PARQUET_DEFAULT_BATCH_SIZE,
+): AnyFrame = readParquet(*paths.toList().toTypedArray(), nullability = nullability, batchSize = batchSize)
+
+/**
+ * Reads Parquet data from an iterable of files, with the same behavior as the vararg [readParquet] overload.
+ *
+ * The iterable is consumed once. [nullability] and [batchSize] are passed to the existing Parquet reader.
+ * Nested structures and timestamps follow the rules documented by [readParquet].
+ *
+ * @param files The files to read; directories are not expanded.
+ */
+@JvmName("readParquetFiles")
+public fun DataFrame.Companion.readParquet(
+    files: Iterable<File>,
+    nullability: NullabilityOptions = NullabilityOptions.Infer,
+    batchSize: Long = ARROW_PARQUET_DEFAULT_BATCH_SIZE,
+): AnyFrame = readParquet(*files.toList().toTypedArray(), nullability = nullability, batchSize = batchSize)
