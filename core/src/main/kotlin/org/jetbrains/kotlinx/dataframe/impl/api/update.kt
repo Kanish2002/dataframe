@@ -143,7 +143,15 @@ internal fun <T> DataColumn<T>.updateWith(values: List<T>): DataColumn<T> =
         }
 
         is ColumnGroup<*> -> {
-            this.columns()
+            val columns = columns()
+            values.forEach {
+                if (it is List<*>) {
+                    require(it.size == columns.size) {
+                        "Invalid number of values for ColumnGroup '$name': expected ${columns.size}, actual ${it.size}"
+                    }
+                }
+            }
+            columns
                 .mapIndexed { colIndex, col ->
                     val newValues = values.map {
                         when (it) {

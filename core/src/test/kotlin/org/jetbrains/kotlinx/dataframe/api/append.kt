@@ -21,7 +21,7 @@ class AppendTests {
 
         val result = df.append("Bill", 30)
 
-        result shouldBe dataFrameOf("name", "age")("Alice", 20, "Bill", 30)
+        result shouldBe dataFrameOf("name", "age")("Alice", 20, "Bill", 30).asColumnGroup("details")
     }
 
     @Test
@@ -117,6 +117,62 @@ class AppendTests {
         }
 
         exception.message shouldBe "Cannot append values to a DataFrame with no columns"
+    }
+
+    @Test
+    fun `append assigns list values to a column group in column order`() {
+        val df = dataFrameOf("person" to dataFrameOf("name", "age")("Alice", 20).asColumnGroup())
+
+        val result = df.append(listOf("Bill", 30))
+
+        result.getColumnGroup("person") shouldBe
+            dataFrameOf("name", "age")("Alice", 20, "Bill", 30).asColumnGroup("person")
+    }
+
+    @Test
+    fun `append rejects shorter and longer lists for a column group`() {
+        val df = dataFrameOf("person" to dataFrameOf("name", "age")("Alice", 20).asColumnGroup())
+
+        listOf(emptyList(), listOf("Bill"), listOf("Bill", 30, "extra")).forEach { values ->
+            val exception = shouldThrow<IllegalArgumentException> {
+                df.append(values)
+            }
+
+            exception.message shouldBe
+                "Invalid number of values for ColumnGroup 'person': expected 2, actual ${values.size}"
+        }
+    }
+
+    @Test
+    fun `append validates lists supplied to nested column groups`() {
+        val details = dataFrameOf("name", "age")("Alice", 20)
+        val person = dataFrameOf("details" to details.asColumnGroup())
+        val df = dataFrameOf("person" to person.asColumnGroup())
+
+        listOf(listOf("Bill"), listOf("Bill", 30, "extra")).forEach { values ->
+            val exception = shouldThrow<IllegalArgumentException> {
+                df.append(listOf(values))
+            }
+
+            exception.message shouldBe
+                "Invalid number of values for ColumnGroup 'details': expected 2, actual ${values.size}"
+        }
+
+        val result = df.append(listOf(listOf("Bill", 30)))
+        result.getColumnGroup("person").getColumnGroup("details") shouldBe
+            dataFrameOf("name", "age")("Alice", 20, "Bill", 30).asColumnGroup("details")
+    }
+
+    @Test
+    fun `append matches column group rows by name and ignores extra columns`() {
+        val df = dataFrameOf("person" to dataFrameOf("name", "age")("Alice", 20).asColumnGroup())
+        val reordered = dataFrameOf("extra", "age", "name")("ignored", 30, "Bill")[0]
+        val missingAge = dataFrameOf("name")("Charlie")[0]
+
+        val result = df.append(reordered, missingAge)
+
+        result.getColumnGroup("person") shouldBe
+            dataFrameOf("name", "age")("Alice", 20, "Bill", 30, "Charlie", null).asColumnGroup("person")
     }
 
     // endregion

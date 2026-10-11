@@ -8,6 +8,20 @@ import org.jetbrains.kotlinx.dataframe.nrow
 
 // region DataFrame
 
+/**
+ * Adds one or several rows to this [DataFrame], assigning [values] in column order, row by row.
+ *
+ * A list supplied for a column group must contain exactly one value per column in the group, in column order.
+ * This also applies to lists supplied for nested column groups.
+ * A [org.jetbrains.kotlinx.dataframe.DataRow] supplied for a column group is matched by column name:
+ * missing columns produce `null`, extra columns are ignored, and column order does not affect the result.
+ *
+ * @param values The values of the rows to append, in row order.
+ * @return A [DataFrame] containing the existing rows followed by the appended rows.
+ * @throws IllegalArgumentException If the number of values is not a multiple of the number of columns,
+ * non-empty values are supplied for a dataframe with no columns, a list supplied for a column group has
+ * an incorrect size, or a value is incompatible with its column.
+ */
 public fun <T> DataFrame<T>.append(vararg values: Any?): DataFrame<T> {
     if (values.isEmpty()) return this
 
