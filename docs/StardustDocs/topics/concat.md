@@ -49,8 +49,8 @@ but its columns still participate in schema unification. Calling the vararg over
 an empty iterable of `DataFrame` objects returns the receiver as the same `DataFrame` instance.
 
 For the overload that appends [`DataRow`](DataRow.md) objects,
-a receiver with no rows contributes no columns to the result schema.
-An empty iterable of `DataRow` objects adds no rows and provides no additional schema to unify.
+the receiver's columns participate in schema unification even when it has no rows.
+An empty iterable of `DataRow` objects returns the receiver as the same `DataFrame` instance, preserving its schema.
 
 See also:
 

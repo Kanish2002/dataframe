@@ -243,8 +243,8 @@ public infix fun <T, T1> DataFrame<T>.concat(frame: DataFrame<T1>): DataFrame<An
  *
  * @include [ConcatDocs.DataRowSchemaUnification]
  *
- * If this [DataFrame] has no rows, its schema does not participate in schema unification.
- * An empty [rows] iterable appends no rows.
+ * The receiver's columns participate in schema unification even when it has no rows.
+ * An empty [rows] iterable appends no rows and returns the receiver as the same [DataFrame] instance.
  *
  * For more information: {@include [DocumentationUrls.Concat]}
  *
@@ -262,7 +262,8 @@ public infix fun <T, T1> DataFrame<T>.concat(frame: DataFrame<T1>): DataFrame<An
  * @return A [DataFrame] containing the rows of this [DataFrame] followed by [rows] in iteration order.
  */
 @JvmName("concatT")
-public fun <T> DataFrame<T>.concat(rows: Iterable<DataRow<T>>): DataFrame<T> = (rows() + rows).concat()
+public fun <T> DataFrame<T>.concat(rows: Iterable<DataRow<T>>): DataFrame<T> =
+    concatImpl(listOf(this) + rows.map { it.toDataFrame() })
 
 /**
  * Returns a [DataFrame] containing the rows of this [DataFrame] followed by the rows from [frames].

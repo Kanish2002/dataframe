@@ -277,6 +277,74 @@ class ConcatTests {
     }
 
     @Test
+    fun `zero-row receiver concat with empty rows preserves its schema`() {
+        val df = DataFrame.emptyOf<EmptySchema>()
+
+        val result = df.concat(emptyList<DataRow<EmptySchema>>())
+
+        result shouldBeSameInstanceAs df
+        result.schema() shouldBe df.schema()
+        result.columnNames() shouldBe listOf("a", "b")
+        result.rowsCount() shouldBe 0
+    }
+
+    @Test
+    fun `zero-row receiver concat rows contributes its columns before supplied columns`() {
+        val df = DataFrame.emptyOf<EmptySchema>().cast<Any>()
+        val rows = dataFrameOf("b", "c")("first", true, "second", false).rows().toList().reversed()
+
+        val result = df.concat(rows)
+
+        result shouldBe dataFrameOf(
+            "a" to DataColumn.createValueColumn<Int?>("a", listOf(null, null)),
+            "b" to columnOf("second", "first"),
+            "c" to columnOf(false, true),
+        )
+        result.columnNames() shouldBe listOf("a", "b", "c")
+        result["a"].type() shouldBe typeOf<Int?>()
+    }
+
+    @Test
+    fun `dataframe concat rows preserves receiver order and unifies each supplied row schema`() {
+        val df = dataFrameOf("id", "left")(1, "a", 2, "b")
+        val first = dataFrameOf("id", "right")(3, true)[0]
+        val second = dataFrameOf("id", "left")(4, "d")[0]
+
+        val result = df.concat(listOf(first, second))
+
+        result shouldBe dataFrameOf(
+            "id" to columnOf(1, 2, 3, 4),
+            "left" to columnOf<String?>("a", "b", null, "d"),
+            "right" to columnOf<Boolean?>(null, null, true, null),
+        )
+    }
+
+    @Test
+    fun `dataframe concat with empty rows preserves nullable runtime types`() {
+        val df = dataFrameOf("value" to DataColumn.createValueColumn<Number?>("value", listOf(1, 2)))
+
+        val result = df.concat(emptyList<DataRow<Any>>())
+
+        result shouldBeSameInstanceAs df
+        result["value"].type() shouldBe typeOf<Number?>()
+    }
+
+    @Test
+    fun `dataframe concat rows consumes supplied iterable once`() {
+        val df = dataFrameOf("id")(1, 2)
+        val rows = dataFrameOf("id")(3, 4).rows().iterator()
+        var iterations = 0
+        val iterable = Iterable {
+            iterations++
+            check(iterations == 1)
+            rows
+        }
+
+        df.concat(iterable) shouldBe dataFrameOf("id")(1, 2, 3, 4)
+        iterations shouldBe 1
+    }
+
+    @Test
     fun `dataframe concat without appended frames returns the receiver instance`() {
         val df = DataFrame.emptyOf<EmptySchema>()
 
