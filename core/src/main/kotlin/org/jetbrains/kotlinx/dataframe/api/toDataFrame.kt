@@ -11,6 +11,7 @@ import org.jetbrains.kotlinx.dataframe.annotations.Refine
 import org.jetbrains.kotlinx.dataframe.columns.BaseColumn
 import org.jetbrains.kotlinx.dataframe.columns.ColumnPath
 import org.jetbrains.kotlinx.dataframe.documentation.DocumentationUrls
+import org.jetbrains.kotlinx.dataframe.documentation.ExcludeFromSources
 import org.jetbrains.kotlinx.dataframe.impl.ColumnNameGenerator
 import org.jetbrains.kotlinx.dataframe.impl.api.createDataFrameImpl
 import org.jetbrains.kotlinx.dataframe.impl.asList
@@ -26,6 +27,20 @@ import kotlin.reflect.typeOf
 
 // region read DataFrame from objects
 
+@ExcludeFromSources
+private interface CreateDataFrameDocs {
+    /**
+     * Scans object properties using reflection and creates a [DataFrame].
+     *
+     * Generic property types use the type arguments of [T], preserving nullable type parameter uses at every depth:
+     * `List<V?>` becomes `List<Int?>` when `V` is `Int`. Top-level value column nullability is inferred from its values.
+     *
+     * For more information: {@include [DocumentationUrls.CreateDataFrameFromIterable]}
+     */
+    typealias FromObjects = Nothing
+}
+
+/** @include [CreateDataFrameDocs.FromObjects] */
 @Refine
 @Interpretable("toDataFrameDefault")
 public inline fun <reified T> Iterable<T>.toDataFrame(): DataFrame<T> =
@@ -33,11 +48,13 @@ public inline fun <reified T> Iterable<T>.toDataFrame(): DataFrame<T> =
         properties()
     }
 
+/** @include [CreateDataFrameDocs.FromObjects] */
 @Refine
 @Interpretable("toDataFrameDsl")
 public inline fun <reified T> Iterable<T>.toDataFrame(noinline body: CreateDataFrameDsl<T>.() -> Unit): DataFrame<T> =
     createDataFrameImpl(typeOf<T>(), body)
 
+/** @include [CreateDataFrameDocs.FromObjects] */
 @Refine
 @Interpretable("toDataFrame")
 public inline fun <reified T> Iterable<T>.toDataFrame(vararg props: KProperty<*>, maxDepth: Int = 0): DataFrame<T> =

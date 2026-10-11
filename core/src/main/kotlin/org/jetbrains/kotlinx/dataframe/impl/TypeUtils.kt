@@ -133,9 +133,14 @@ internal fun KType.projectDownTo(subClass: KClass<*>): KType {
     return type
 }
 
+/**
+ * Replaces type parameters at any depth, preserving the nullability of each type parameter use.
+ */
 internal fun KType.replace(substitution: Map<KTypeParameter, KType?>): KType =
     when (val clazz = classifier) {
-        is KTypeParameter -> substitution[clazz] ?: this
+        is KTypeParameter -> substitution[clazz]
+            ?.let { if (isMarkedNullable) it.withNullability(true) else it }
+            ?: this
 
         is KClass<*> -> clazz.createType(
             arguments.map { KTypeProjection(it.variance, it.type?.replace(substitution)) },

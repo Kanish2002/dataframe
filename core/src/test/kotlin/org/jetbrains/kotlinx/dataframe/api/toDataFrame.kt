@@ -20,7 +20,6 @@ import org.jetbrains.kotlinx.dataframe.annotations.DataSchema
 import org.jetbrains.kotlinx.dataframe.columns.ColumnKind
 import org.jetbrains.kotlinx.dataframe.kind
 import org.jetbrains.kotlinx.dataframe.type
-import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 import java.math.BigDecimal
@@ -287,8 +286,6 @@ class CreateDataFrameTests {
         value["data"].type() shouldBe typeOf<List<Int?>>()
     }
 
-    // TODO(#2133): `KType.replace` drops the `?` of a type parameter use
-    @Ignore("toDataFrame drops the `?` of `V?` inside `List<V?>`")
     @Test
     fun `nullable type parameter inside a property type keeps its nullability`() {
         class ListBox<V>(val items: List<V?>)
@@ -299,8 +296,6 @@ class CreateDataFrameTests {
         df["items"].type() shouldBe typeOf<List<Int?>>()
     }
 
-    // TODO(#2133): `KType.replace` drops the `?` of a type parameter use
-    @Ignore("toDataFrame drops the `?` of `V?` inside `List<V?>`")
     @Test
     fun `nullable type parameter inside a property type keeps its nullability with maxDepth`() {
         class ListBox<V>(val items: List<V?>)
@@ -308,6 +303,26 @@ class CreateDataFrameTests {
         val df = listOf(ListBox<Int>(listOf(1, null))).toDataFrame(maxDepth = 10)
 
         df["items"].type() shouldBe typeOf<List<Int?>>()
+    }
+
+    @Test
+    fun `top-level nullable type parameter property infers nullability from values`() {
+        class NullableBox<V>(val value: V?)
+
+        listOf(NullableBox<Int>(1)).toDataFrame()["value"].type() shouldBe typeOf<Int>()
+        listOf(NullableBox<Int>(null)).toDataFrame()["value"].type() shouldBe typeOf<Int?>()
+        listOf(NullableBox<Int>(1), NullableBox<Int>(null)).toDataFrame()["value"].type() shouldBe typeOf<Int?>()
+    }
+
+    @Test
+    fun `nullable generic list property survives a round trip through dataframe`() {
+        data class ListBox<V>(val items: List<V?>)
+
+        val values = listOf(ListBox<Int>(listOf(1, null)), ListBox<Int>(listOf(null, 2)))
+        val df = values.toDataFrame()
+
+        df["items"].type() shouldBe typeOf<List<Int?>>()
+        df.toListOf<ListBox<Int>>() shouldBe values
     }
 
     @Suppress("unused")

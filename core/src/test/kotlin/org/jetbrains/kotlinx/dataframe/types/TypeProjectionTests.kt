@@ -8,6 +8,7 @@ import org.jetbrains.kotlinx.dataframe.columns.SingleColumn
 import org.jetbrains.kotlinx.dataframe.impl.columns.ColumnGroupWithParent
 import org.jetbrains.kotlinx.dataframe.impl.commonType
 import org.jetbrains.kotlinx.dataframe.impl.createTypeUsing
+import org.jetbrains.kotlinx.dataframe.impl.projectUpTo
 import org.jetbrains.kotlinx.dataframe.types.TypeProjectionTests.TypeInferenceTest1.Test1A
 import org.jetbrains.kotlinx.dataframe.types.TypeProjectionTests.TypeInferenceTest1.Test1X
 import org.jetbrains.kotlinx.dataframe.types.TypeProjectionTests.TypeInferenceTest2.B
@@ -17,6 +18,16 @@ import org.junit.Test
 import kotlin.reflect.typeOf
 
 class TypeProjectionTests {
+    private class NullableList<T>(private val values: List<T?>) : List<T?> by values
+
+    @Test
+    fun `projection preserves nullable type parameter uses in a supertype`() {
+        typeOf<NullableList<Int>>().projectUpTo(List::class) shouldBe typeOf<List<Int?>>()
+        typeOf<NullableList<Int?>>().projectUpTo(List::class) shouldBe typeOf<List<Int?>>()
+        List::class.createTypeUsing<NullableList<Int>>() shouldBe typeOf<List<Int?>>()
+        listOf(typeOf<NullableList<Int>>(), typeOf<List<Int>>()).commonType() shouldBe typeOf<List<out Int?>>()
+    }
+
     class TypeInferenceTest1 {
         interface Test1A<T>
 

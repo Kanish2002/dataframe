@@ -247,6 +247,10 @@ val df = persons.toDataFrame()
 <!---END-->
 
 Scans object properties using reflection and creates a [ValueColumn](DataColumn.md#valuecolumn) for every property. 
+Generic property types are resolved using the object's formal type arguments. Nullable type parameter uses
+are preserved at every depth: a property declared as `List<V?>` becomes `List<Int?>` when `V` is `Int`.
+Top-level value column nullability is still inferred from the column's values.
+
 The scope of properties for scanning is defined at compile-time by the formal types of the objects in the [`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/),
 so the properties of implementation classes will not be scanned.
 

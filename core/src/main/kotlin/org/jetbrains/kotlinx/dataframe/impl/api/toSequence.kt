@@ -12,13 +12,10 @@ import org.jetbrains.kotlinx.dataframe.api.rows
 import org.jetbrains.kotlinx.dataframe.columns.ColumnKind
 import org.jetbrains.kotlinx.dataframe.impl.columnName
 import org.jetbrains.kotlinx.dataframe.impl.columns.asAnyFrameColumn
+import org.jetbrains.kotlinx.dataframe.impl.replace
 import org.jetbrains.kotlinx.dataframe.kind
 import org.jetbrains.kotlinx.dataframe.type
-import kotlin.reflect.KClass
 import kotlin.reflect.KType
-import kotlin.reflect.KTypeParameter
-import kotlin.reflect.KTypeProjection
-import kotlin.reflect.full.createType
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -42,7 +39,7 @@ internal fun AnyFrame.toSequenceImpl(type: KType): Sequence<Any> {
 
     val convertedColumns = constructor.parameters.mapNotNull {
         require(it.name != null) { "Parameter name can not be null. Parameter = $it" }
-        val parameterType = it.type.substitute(substitution)
+        val parameterType = it.type.replace(substitution)
         val columnName = columnNames[it.name]
 
         check(columnName != null) { "Can not find member property for parameter ${it.name}" }
@@ -110,21 +107,3 @@ internal fun AnyFrame.toSequenceImpl(type: KType): Sequence<Any> {
         }
     }
 }
-
-/**
- * Replaces the type parameters of a generic data class in this type with the type arguments from [substitution],
- * at any depth, and keeps the `?` of each use: `List<V?>` becomes `List<Int?>` for `V` = `Int`.
- */
-private fun KType.substitute(substitution: Map<KTypeParameter, KType>): KType =
-    when (val classifier = classifier) {
-        is KTypeParameter -> substitution[classifier]
-            ?.let { if (isMarkedNullable) it.withNullability(true) else it }
-            ?: this
-
-        is KClass<*> -> classifier.createType(
-            arguments.map { KTypeProjection(it.variance, it.type?.substitute(substitution)) },
-            nullable = isMarkedNullable,
-        )
-
-        else -> this
-    }
